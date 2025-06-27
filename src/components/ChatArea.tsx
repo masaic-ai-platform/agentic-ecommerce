@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { MessageBubble } from './MessageBubble';
@@ -17,7 +16,7 @@ export const ChatArea = () => {
 
   return (
     <div className="flex-1 overflow-y-auto chat-scroll px-6 py-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         {messages.map((message) => (
           <MessageBubble key={message.id} message={message} />
         ))}

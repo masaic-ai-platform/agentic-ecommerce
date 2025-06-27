@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
@@ -78,6 +77,135 @@
     @apply bg-gray-900/80 text-gray-100 px-4 py-3 rounded-chat max-w-lg border border-gray-800;
   }
 
+  .message-bubble-user-large {
+    @apply bg-gradient-gold text-black px-6 py-4 rounded-chat ml-auto;
+    max-width: 66.666667%; /* 2/3 of container width */
+    min-width: 200px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .message-bubble-assistant-large {
+    @apply bg-gray-900/90 text-gray-100 px-6 py-4 rounded-chat border border-gray-700;
+    max-width: 66.666667%; /* 2/3 of container width */
+    min-width: 300px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.6;
+  }
+
+  .chat-area-large {
+    min-height: 33.333333vh; /* 1/3 of viewport height */
+    flex: 1;
+  }
+
+  .message-bubble-assistant-large img {
+    @apply rounded-lg shadow-lg border border-gray-600 max-w-full h-auto my-3;
+    max-height: 400px;
+    object-fit: contain;
+  }
+
+  .message-bubble-assistant-large h3 {
+    @apply text-xl font-bold text-gold mb-3 mt-4 first:mt-0;
+  }
+
+  .message-bubble-assistant-large h4 {
+    @apply text-lg font-semibold text-gold mb-2 mt-3 first:mt-0;
+  }
+
+  .message-bubble-assistant-large strong {
+    @apply font-semibold text-white;
+  }
+
+  .message-bubble-assistant-large a {
+    @apply text-gold hover:text-gold-dim underline;
+    transition: color 0.2s ease;
+  }
+
+  .message-bubble-assistant-large li {
+    @apply mb-1 text-gray-200;
+  }
+
+  /* Custom prose styles for better markdown rendering */
+  .prose-custom {
+    @apply text-gray-100;
+    line-height: 1.7;
+  }
+
+  .prose-custom h1 {
+    @apply text-3xl font-bold text-gold mb-5 mt-6 first:mt-0;
+  }
+
+  .prose-custom h2 {
+    @apply text-2xl font-bold text-gold mb-4 mt-5 first:mt-0;
+  }
+
+  .prose-custom h3 {
+    @apply text-xl font-bold text-gold mb-3 mt-4 first:mt-0;
+  }
+
+  .prose-custom h4 {
+    @apply text-lg font-semibold text-gold mb-2 mt-4 first:mt-0;
+  }
+
+  .prose-custom strong {
+    @apply font-semibold text-white;
+  }
+
+  .prose-custom em {
+    @apply italic text-gray-300;
+  }
+
+  .prose-custom a {
+    @apply text-gold hover:text-gold/80 underline transition-colors;
+  }
+
+  .prose-custom img {
+    @apply rounded-lg shadow-lg border border-gray-600 max-w-full h-auto my-4;
+    max-height: 400px;
+    object-fit: contain;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .prose-custom div img {
+    @apply mx-auto;
+  }
+
+  /* Better spacing for list items */
+  .prose-custom > div[class*="flex items-start"] {
+    @apply mb-2;
+  }
+
+  /* Ensure paragraphs have proper spacing */
+  .prose-custom br + br {
+    display: block;
+    content: " ";
+    margin-top: 0.75rem;
+  }
+
+  /* Table styling for markdown tables */
+  .prose-custom table {
+    @apply w-full bg-gray-800/50 rounded-lg border border-gray-600 my-4;
+  }
+
+  .prose-custom table th {
+    @apply px-3 py-2 text-left font-semibold text-gold border-b border-gray-600;
+  }
+
+  .prose-custom table td {
+    @apply px-3 py-2 border-b border-gray-700 text-gray-200;
+  }
+
+  .prose-custom table tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .prose-custom table tr:hover {
+    @apply bg-gray-700/30;
+  }
+
   .phase-dot {
     @apply w-2 h-2 rounded-full transition-colors duration-300;
   }
@@ -92,5 +220,96 @@
 
   .phase-dot-upcoming {
     @apply bg-gray-600;
+  }
+
+  @keyframes smoothBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+  }
+
+  .animate-blink {
+    animation: smoothBlink 1s ease-in-out infinite;
+  }
+
+  /* VS Code-like syntax highlighting */
+  .language-python {
+    color: #d4d4d4;
+    background-color: #1e1e1e;
+  }
+
+  /* Python keywords - purple/magenta */
+  .language-python .token.keyword {
+    color: #c586c0;
+    font-weight: normal;
+  }
+
+  /* Strings - orange/amber */
+  .language-python .token.string {
+    color: #ce9178;
+  }
+
+  /* Comments - green */
+  .language-python .token.comment {
+    color: #6a9955;
+    font-style: italic;
+  }
+
+  /* Numbers - light green */
+  .language-python .token.number {
+    color: #b5cea8;
+  }
+
+  /* Functions - yellow */
+  .language-python .token.function {
+    color: #dcdcaa;
+  }
+
+  /* Variables and identifiers */
+  .language-python .token.variable {
+    color: #9cdcfe;
+  }
+
+  /* Operators */
+  .language-python .token.operator {
+    color: #d4d4d4;
+  }
+
+  /* Punctuation */
+  .language-python .token.punctuation {
+    color: #d4d4d4;
+  }
+
+  /* Built-in types and constants */
+  .language-python .token.builtin {
+    color: #4ec9b0;
+  }
+
+  /* Code editor scrollbar - VS Code style */
+  .language-python::-webkit-scrollbar,
+  pre::-webkit-scrollbar {
+    height: 12px;
+    width: 12px;
+  }
+
+  .language-python::-webkit-scrollbar-track,
+  pre::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+
+  .language-python::-webkit-scrollbar-thumb,
+  pre::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 6px;
+  }
+
+  .language-python::-webkit-scrollbar-thumb:hover,
+  pre::-webkit-scrollbar-thumb:hover {
+    background: #4f4f4f;
+  }
+
+  /* Code editor selection */
+  .language-python::selection,
+  pre::selection {
+    background: #264f78;
   }
 }

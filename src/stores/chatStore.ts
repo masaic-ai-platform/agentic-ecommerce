@@ -1,5 +1,5 @@
-
 import { create } from 'zustand';
+import { useProgressStore } from './progressStore';
 
 export type Phase = 'search' | 'select' | 'pay' | 'confirm';
 
@@ -15,10 +15,14 @@ interface ChatState {
   messages: Message[];
   currentPhase: Phase;
   isStreaming: boolean;
+  previousResponseId: string | null;
+  currentImageUrl: string | null;
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   updateLastMessage: (content: string) => void;
   setPhase: (phase: Phase) => void;
   setStreaming: (streaming: boolean) => void;
+  setPreviousResponseId: (id: string | null) => void;
+  setCurrentImageUrl: (url: string | null) => void;
   startOver: () => void;
 }
 
@@ -31,8 +35,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       timestamp: new Date(),
     }
   ],
-  currentPhase: 'search',
-  isStreaming: false,
+              currentPhase: 'search',
+      isStreaming: false,
+      previousResponseId: null,
+      currentImageUrl: null,
 
   addMessage: (message) => {
     const newMessage: Message = {
@@ -66,7 +72,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isStreaming: streaming });
   },
 
+  setPreviousResponseId: (id) => {
+    set({ previousResponseId: id });
+  },
+
+  setCurrentImageUrl: (url) => {
+    set({ currentImageUrl: url });
+  },
+
   startOver: () => {
+    // Clear progress stages
+    const progressStore = useProgressStore.getState();
+    progressStore.clearStages();
+    
     set({
       messages: [
         {
@@ -78,6 +96,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ],
       currentPhase: 'search',
       isStreaming: false,
+      previousResponseId: null,
     });
   },
 }));

@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { Send } from 'lucide-react';
 import { useChatStore } from '@/stores/chatStore';
+import { searchAPIService } from '@/services/apiService';
 
 export const ChatInput = () => {
   const [input, setInput] = useState('');
@@ -17,14 +17,24 @@ export const ChatInput = () => {
       content: input.trim(),
     });
 
-    // Simulate assistant response with streaming
-    simulateAssistantResponse(input.trim());
+    // Call search API for search phase, keep mock for other phases
+    handleAssistantResponse(input.trim());
     
     setInput('');
   };
 
-  const simulateAssistantResponse = (userInput: string) => {
-    const { addMessage, updateLastMessage, setStreaming, setPhase, currentPhase } = useChatStore.getState();
+  const handleAssistantResponse = (userInput: string) => {
+    const { 
+      addMessage, 
+      updateLastMessage, 
+      setStreaming, 
+      setPhase, 
+      setPreviousResponseId,
+      setCurrentImageUrl,
+      currentPhase, 
+      previousResponseId,
+      currentImageUrl
+    } = useChatStore.getState();
     
     setStreaming(true);
     
@@ -35,21 +45,155 @@ export const ChatInput = () => {
       streaming: true,
     });
 
-    // Simulate different responses based on phase and input
+    if (currentPhase === 'search') {
+      // Use real API for search phase
+      searchAPIService.searchProducts(
+        userInput,
+        previousResponseId,
+        // onDelta - stream content updates
+        (content) => {
+          updateLastMessage(content);
+        },
+        // onComplete - handle successful response
+        (response, responseId) => {
+          updateLastMessage(response.details);
+          setStreaming(false);
+          
+          // Store response ID for future requests
+          if (responseId) {
+            setPreviousResponseId(responseId);
+          }
+          
+          // Store image URL for select phase
+          if (response.image_url) {
+            setCurrentImageUrl(response.image_url);
+          }
+          
+          // Only advance to next phase if search completed successfully
+          if (response.completedStage === 'search') {
+            setTimeout(() => setPhase('select'), 1000);
+          }
+          // If stage not completed, stay in search phase for user to try again
+        },
+        // onError - handle errors
+        (error) => {
+          updateLastMessage(`❌ ${error}\n\nPlease try again with a different search term.`);
+          setStreaming(false);
+          // Stay in search phase for retry
+        }
+      );
+    } else if (currentPhase === 'select') {
+      // Use real API for select phase with hardcoded image URL
+      const hardcodedImageUrl = "https://cdn.shopify.com/s/files/1/0948/4369/9488/files/printer-front.avif?v=1750994570";
+
+      // Show loading message during processing
+      updateLastMessage('🎨 Generating scene visualization...');
+
+      searchAPIService.selectProduct(
+        userInput,
+        previousResponseId,
+        hardcodedImageUrl,
+        // onComplete - handle successful response
+        (response, responseId) => {
+          // Display situation description and handle the generated image
+          let content = response.situationDescription;
+          
+          // Check if the image URL is a file:// URL (which browsers can't display)
+          if (response.image_url && response.image_url.startsWith('file://')) {
+            // Convert file:// URL to HTTP URL served by the image server
+            // Extract the filename from the file path
+            const filename = response.image_url.split('/').pop();
+            const httpImageUrl = `http://localhost:8086/generated_img/${filename}`;
+            
+            // Use HTTP URL that browsers can display
+            content += `\n\n![Generated Scene](${httpImageUrl})`;
+          } else if (response.image_url) {
+            // For HTTP/HTTPS URLs, render as normal
+            content += `\n\n![Generated Scene](${response.image_url})`;
+          }
+          
+          updateLastMessage(content);
+          setStreaming(false);
+          
+          // Store response ID for future requests
+          if (responseId) {
+            setPreviousResponseId(responseId);
+          }
+          
+          // Only advance to next phase if select completed successfully
+          if (response.completedStage === 'select') {
+            setTimeout(() => {
+              setPhase('pay');
+              
+              // Automatically show payment CTA after phase transition
+              setTimeout(() => {
+                addMessage({
+                  role: 'assistant',
+                  content: `🛒 **Ready to Purchase!**\n\nYour scene visualization looks perfect! Ready to complete your purchase?\n\n**💳 Payment Options**\n\n[🔗 **Pay Now with Razorpay**](https://razorpay.me/@snowballagents?amount=EPec5evqGoRk2C8icWNJlQ%3D%3D)\n\n*Click the link above to complete your payment securely. The link will open in a new tab.*\n\nAfter payment, paste your transaction ID here to confirm your order.`,
+                  streaming: false,
+                });
+              }, 500);
+            }, 1000);
+          }
+          // If stage not completed, stay in select phase for user to try again
+        },
+        // onError - handle errors
+        (error) => {
+          updateLastMessage(`❌ ${error}\n\nPlease try again with a different description.`);
+          setStreaming(false);
+          // Stay in select phase for retry
+        }
+      );
+    } else if (currentPhase === 'pay') {
+      // Only handle transaction ID confirmation in pay phase
+      // (Payment CTA is now shown automatically when entering pay phase)
+      if (userInput.toLowerCase().includes('pay') || userInput.toLowerCase().includes('transaction') || userInput.length > 10) {
+        // Use real API for payment confirmation
+        // Note: streaming message is already added in handleSubmit
+        searchAPIService.confirmPayment(
+          userInput,
+          // onDelta - stream content updates
+          (content) => {
+            console.log('Pay phase delta update:', content);
+            updateLastMessage(content);
+          },
+          // onComplete - handle successful response
+          (response) => {
+            console.log('Pay phase complete:', response);
+            updateLastMessage(response.orderDetails);
+            setStreaming(false);
+            
+            // Move to confirm phase after successful payment confirmation
+            if (response.completedStage === 'confirm') {
+              setTimeout(() => setPhase('confirm'), 1000);
+            }
+          },
+          // onError - handle errors
+          (error) => {
+            console.log('Pay phase error:', error);
+            updateLastMessage(`❌ ${error}\n\nPlease check your payment ID and try again.`);
+            setStreaming(false);
+            // Stay in pay phase for retry
+          }
+        );
+        return; // Exit early to avoid the mock response
+      } else {
+        // Use mock functionality for waiting for payment ID
+        simulateOtherPhases(userInput);
+      }
+    } else {
+      // Keep existing mock functionality for other phases (confirm)
+      simulateOtherPhases(userInput);
+    }
+  };
+
+  const simulateOtherPhases = (userInput: string) => {
+    const { updateLastMessage, setStreaming, setPhase, currentPhase } = useChatStore.getState();
+    
     let response = '';
     
-    if (currentPhase === 'search') {
-      response = `I found some great products for "${userInput}"! Here's what I recommend:\n\n**Premium Wireless Headphones** - $299\n- Noise cancellation technology\n- 30-hour battery life\n- Premium build quality\n\nhttps://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400\n\nWould you like to see how these look in your space?`;
-    } else if (currentPhase === 'select') {
-      response = `Perfect! Let me show you how the **Premium Wireless Headphones** would look in your environment:\n\nhttps://images.unsplash.com/photo-1484704849700-f032a568e944?w=500\n\nThey look great! Ready to proceed with payment? \n\n[**Pay Now - $299**](https://checkout.razorpay.com/demo) 💳`;
-      setPhase('pay');
-    } else if (currentPhase === 'pay') {
-      if (userInput.startsWith('pay_')) {
-        response = `🎉 **Payment Successful!**\n\nThank you for your purchase!\n\n**Order Summary:**\n- Premium Wireless Headphones: $299\n- Transaction ID: ${userInput}\n- Estimated delivery: 2-3 business days\n\nYou'll receive a confirmation email shortly. Enjoy your new headphones!`;
-        setPhase('confirm');
-      } else {
-        response = `Please complete your payment and paste the payment ID (starting with "pay_") here to confirm your order.`;
-      }
+    if (currentPhase === 'pay') {
+      response = `Please provide your transaction ID after completing the payment. I'm waiting for your payment confirmation.`;
     } else {
       response = `Thank you for shopping with SnowballShop! Is there anything else I can help you find today?`;
     }
@@ -63,18 +207,13 @@ export const ChatInput = () => {
       } else {
         clearInterval(streamInterval);
         setStreaming(false);
-        
-        // Auto-advance phase for demo
-        if (currentPhase === 'search' && !response.includes('payment')) {
-          setTimeout(() => setPhase('select'), 1000);
-        }
       }
     }, 30);
   };
 
   return (
-    <div className="border-t border-gray-800 bg-black/90 backdrop-blur-sm p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="border-t border-gray-800 bg-black/95 backdrop-blur-sm p-4">
+      <div className="w-full px-2">
         <form onSubmit={handleSubmit} className="flex space-x-3">
           <input
             type="text"
