@@ -1,4 +1,3 @@
-
 import { RefreshCw } from 'lucide-react';
 import { useChatStore, type Phase } from '@/stores/chatStore';
 
@@ -22,7 +21,7 @@ export const PhaseTracker = () => {
   };
 
   return (
-    <header className="bg-black/90 backdrop-blur-sm border-b border-gray-800 px-6 py-4">
+    <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gray-800 px-6 py-4">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <h1 className="text-xl font-semibold text-gold">SnowballShop</h1>
