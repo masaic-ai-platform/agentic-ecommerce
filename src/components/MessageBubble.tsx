@@ -20,8 +20,22 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
     content = content.replace(/>/g, '&gt;');
     
     // Step 2: Handle standalone image URLs first (convert to markdown)
+    // Handle "Image URL: https://..." pattern specifically
+    content = content.replace(
+      /Image URL:\s*(https?:\/\/[^\s]+\.(png|jpg|jpeg|avif|webp)(?:\?[^\s]*)?)/gim,
+      '![Product Image]($1)'
+    );
+    
+    // Handle URLs at start of lines or after newlines
     content = content.replace(
       /(^|\n)(https?:\/\/[^\s]+\.(png|jpg|jpeg|avif|webp)(?:\?[^\s]*)?)/gim,
+      '$1![Product Image]($2)'
+    );
+    
+    // Also handle URLs that appear anywhere in text (more aggressive detection)
+    // But avoid URLs that are already part of markdown syntax
+    content = content.replace(
+      /(^|[^[\(])(https?:\/\/[^\s]+\.(png|jpg|jpeg|avif|webp)(?:\?[^\s]*)?)/gim,
       '$1![Product Image]($2)'
     );
     
